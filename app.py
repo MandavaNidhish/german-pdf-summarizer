@@ -297,12 +297,9 @@ def format_file_size(size_bytes):
 # Create app instance
 app = create_app()
 
-# For Vercel deployment
-if __name__ != '__main__':
-    # This is for Vercel serverless function
-    handler = app
-
 if __name__ == '__main__':
-    # This is for local development
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    import os
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
+
 
