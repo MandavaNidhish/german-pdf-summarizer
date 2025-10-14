@@ -300,15 +300,9 @@ app = create_app()
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
-
-    logger = logging.getLogger(__name__)
-    logger.info("🌐 Starting PDF Parsing Server...")
-    logger.info(f"📱 Frontend available at: http://localhost:{port}")
-    logger.info(f"🔗 API health check at: http://localhost:{port}/api/health")
-
+    
     app.run(
         host='0.0.0.0',
         port=port,
-        debug=False,  # MUST be False for production
-        threaded=True
+        debug=False  # Important for production
     )
