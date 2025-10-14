@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Parsing & Workflow - German Business Registry Processor</title>
+    <meta name="description" content="Automatische Suche und AI-Zusammenfassung von deutschen Handelsregisterdokumenten">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <h1>PDF Parsing & Workflow</h1>
+            <p class="subtitle">
+                Geben Sie den Namen eines deutschen Unternehmens ein, um das entsprechende 
+                Handelsregisterdokument automatisch zu finden, herunterzuladen und mit KI zu analysieren.
+            </p>
+        </header>
+
+        <!-- Main Search Section -->
+        <main class="search-section">
+            <form id="searchForm" class="search-form" novalidate>
+                <div class="form-group">
+                    <label for="companyName" class="form-label">
+                        <span class="label-text">Firmenname</span>
+                        <span class="label-hint">Mindestens 3 Zeichen</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="companyName" 
+                        name="companyName"
+                        class="form-control" 
+                        placeholder="z.B. Deutsche Morgan Horse Association"
+                        autocomplete="organization"
+                        maxlength="200"
+                        required
+                        aria-describedby="companyNameHelp errorMessage"
+                    >
+                    <div id="companyNameHelp" class="form-help">
+                        Geben Sie den vollständigen oder teilweisen Firmennamen ein
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" id="searchBtn" class="btn btn--primary btn--lg btn--full-width">
+                        <span class="btn-icon">🔍</span>
+                        <span class="btn-text">Suchen & Verarbeiten</span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Error Message Display -->
+            <div id="errorMessage" class="error-message" role="alert" aria-live="polite">
+                <!-- Error messages will be displayed here -->
+            </div>
+        </main>
+
+        <!-- Status Section -->
+        <section id="statusSection" class="status-section" style="display: none;">
+            <div class="card">
+                <div class="card__header">
+                    <h2>Verarbeitungsstatus</h2>
+                </div>
+                <div class="card__body">
+                    <ul id="statusList" class="status-list">
+                        <!-- Status items will be populated by JavaScript -->
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="resultsSection" class="results-section" style="display: none;">
+            <!-- Company Information Card -->
+            <div class="card">
+                <div class="card__header">
+                    <h2>Unternehmensinformationen</h2>
+                </div>
+                <div class="card__body">
+                    <div class="company-info">
+                        <div class="info-item">
+                            <span class="info-label">Gefundenes Unternehmen:</span>
+                            <span id="companyName_result" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Dateiname:</span>
+                            <span id="fileName" class="info-value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Dateigröße:</span>
+                            <span id="fileSize" class="info-value">-</span>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <button id="downloadBtn" class="btn btn--secondary btn--lg" style="display: none;">
+                            <span class="btn-icon">💾</span>
+                            <span class="btn-text">PDF herunterladen</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Summary Card -->
+            <div class="card">
+                <div class="card__header">
+                    <h2>KI-Zusammenfassung</h2>
+                </div>
+                <div class="card__body">
+                    <div id="summaryContent" class="summary-content">
+                        <p>Die Zusammenfassung wird hier angezeigt...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Extracted Information Card -->
+            <div class="card">
+                <div class="card__header">
+                    <h2>Extrahierte Informationen</h2>
+                </div>
+                <div class="card__body">
+                    <div id="extractedInfo" class="extracted-info">
+                        <p>Strukturierte Daten werden hier angezeigt...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Processing Statistics Card -->
+            <div class="card">
+                <div class="card__header">
+                    <h2>Verarbeitungsstatistiken</h2>
+                </div>
+                <div class="card__body">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Verarbeitungszeit:</span>
+                            <span id="processingTime" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Qualitätsbewertung:</span>
+                            <span id="qualityScore" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Wortanzahl:</span>
+                            <span id="wordCount" class="stat-value">-</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Extraktionsmethode:</span>
+                            <span id="extractionMethod" class="stat-value">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>
+                    <strong>Hinweis:</strong> Diese Anwendung durchsucht automatisch das deutsche Handelsregister 
+                    und erstellt KI-gestützte Zusammenfassungen der gefundenen Dokumente.
+                </p>
+                <p class="footer-meta">
+                    Originaldokumente werden vom Handelsregister heruntergeladen und verarbeitet. 
+                    Alle Daten werden lokal gespeichert.
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+
+    <!-- Additional Styles for Enhanced UX -->
+    <style>
+        .error-message {
+            display: none;
+            padding: 12px 16px;
+            margin-top: 16px;
+            background-color: var(--color-error);
+            color: white;
+            border-radius: var(--radius-base);
+            font-weight: var(--font-weight-medium);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .status-section, .results-section {
+            margin-top: var(--space-32);
+        }
+
+        .status-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            padding: var(--space-12) 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-icon {
+            margin-right: var(--space-12);
+            font-size: var(--font-size-lg);
+            min-width: 24px;
+        }
+
+        .status-text {
+            flex-grow: 1;
+            font-weight: var(--font-weight-medium);
+        }
+
+        .status-item.processing .status-text {
+            color: var(--color-info);
+        }
+
+        .status-item.completed .status-text {
+            color: var(--color-success);
+        }
+
+        .status-item.failed .status-text {
+            color: var(--color-error);
+        }
+
+        .company-info .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-8) 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .info-label {
+            font-weight: var(--font-weight-medium);
+            color: var(--color-text-secondary);
+        }
+
+        .info-value {
+            font-weight: var(--font-weight-semibold);
+            color: var(--color-text);
+        }
+
+        .actions {
+            margin-top: var(--space-24);
+            text-align: center;
+        }
+
+        .summary-content {
+            line-height: var(--line-height-normal);
+            font-size: var(--font-size-md);
+        }
+
+        .extracted-info ul {
+            list-style-type: disc;
+            padding-left: var(--space-24);
+        }
+
+        .extracted-info li {
+            margin-bottom: var(--space-8);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--space-16);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            padding: var(--space-16);
+            background-color: var(--color-secondary);
+            border-radius: var(--radius-base);
+        }
+
+        .stat-label {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-4);
+        }
+
+        .stat-value {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-text);
+        }
+
+        .stat-value.high-quality {
+            color: var(--color-success);
+        }
+
+        .stat-value.medium-quality {
+            color: var(--color-warning);
+        }
+
+        .stat-value.low-quality {
+            color: var(--color-error);
+        }
+
+        .form-help {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+            margin-top: var(--space-4);
+        }
+
+        .label-text {
+            display: inline-block;
+            margin-bottom: var(--space-4);
+        }
+
+        .label-hint {
+            font-size: var(--font-size-xs);
+            color: var(--color-text-secondary);
+            font-weight: var(--font-weight-normal);
+            margin-left: var(--space-8);
+        }
+
+        .form-control.error {
+            border-color: var(--color-error);
+            box-shadow: 0 0 0 3px rgba(var(--color-error-rgb), 0.1);
+        }
+
+        .footer {
+            margin-top: var(--space-32);
+            padding-top: var(--space-24);
+            border-top: 1px solid var(--color-border);
+            text-align: center;
+        }
+
+        .footer-content p {
+            margin-bottom: var(--space-12);
+        }
+
+        .footer-meta {
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .company-info .info-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--space-4);
+            }
+        }
+    </style>
+</body>
+</html>
