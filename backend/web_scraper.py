@@ -91,7 +91,7 @@ class HandelsregisterScraper:
         chrome_options.add_experimental_option('useAutomationExtension', False)
 
         try:
-            driver_path = os.path.join(os.getcwd(), "drivers", "chromedriver.exe")
+            driver_path = ChromeDriverManager().install()
             service = Service(driver_path)
 
             self.driver = webdriver.Chrome(service=service, options=chrome_options)
