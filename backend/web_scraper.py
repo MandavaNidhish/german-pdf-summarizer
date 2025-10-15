@@ -54,7 +54,7 @@ class HandelsregisterScraper:
     def setup_driver(self):
         """Initialize Chrome driver with enhanced settings and download fix"""
         chrome_options = Options()
-        chrome_options.binary_location = "/usr/bin/google-chrome"
+        chrome_options.binary_location = "/usr/bin/google-chrome-stable"
         if self.headless:
             chrome_options.add_argument("--headless")
 
