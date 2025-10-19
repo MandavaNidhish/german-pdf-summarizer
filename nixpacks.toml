@@ -1,0 +1,13 @@
+[phases.setup]
+aptPkgs = [
+    "chromium", 
+    "chromium-driver",
+    "wget",
+    "unzip"
+]
+
+[phases.install]
+cmds = ["pip install -r requirements.txt"]
+
+[start]
+cmd = "gunicorn app:app"
